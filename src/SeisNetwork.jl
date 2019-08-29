@@ -1,6 +1,6 @@
 module SeisNetwork
 
-using SeisIO, Triangle, LinearAlgebra, Statistics, Geodesy, JLD2, ORCA, PlotlyJS
+using SeisIO, SeisNoise, Triangle, LinearAlgebra, Statistics, Geodesy, JLD2, ORCA, PlotlyJS
 
 using LightXML, Dates, HDF5
 

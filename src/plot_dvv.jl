@@ -103,7 +103,7 @@ function plot_dvv(InputDict::Dict)
                         push!(avgdvv, mean(dvvtemp))
                     else
                         push!(avgT, testtavg)
-                        push!(avgdvv, NaN)
+                        push!(avgdvv, 0)
                     end
                 end
             end
@@ -112,7 +112,21 @@ function plot_dvv(InputDict::Dict)
         sortid = sortperm(avgT)
         avgT = avgT[sortid]
         avgdvv = avgdvv[sortid]
+        avgT = convert(Array{Int64,1}, avgT)
+        avgvv =  convert(Array{Float64,1}, avgdvv)
         # println(sortid)
+
+
+        # smoothing dv/v
+        if InputDict["smoothing"]
+            trace1 = PlotlyJS.scatter(x=timestamp.(avgT), y=avgdvv)
+            SeisNoise.smooth!(avgdvv; half_win=5)
+            println(avgdvv)
+            trace2 = PlotlyJS.scatter(x=timestamp.(avgT), y=avgdvv, label="after smooth")
+            p = PlotlyJS.plot([trace1, trace2])
+            display(p)
+            readline()
+        end
 
         if !isempty(avgT)
             stday_test = avgT[1]
@@ -120,6 +134,7 @@ function plot_dvv(InputDict::Dict)
             if stday_test < stday stday = stday_test; end
             if etday_test > etday etday = etday_test; end
         end
+
 
         push!(loc_and_dvv, (centerlonlat, edgeinfo, avgT, avgdvv))
 
