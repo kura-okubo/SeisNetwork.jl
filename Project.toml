@@ -3,6 +3,20 @@ uuid = "ecc1399e-126a-46dd-ab0d-aef1ed4bb3d1"
 authors = ["kurama"]
 version = "0.1.0"
 
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Geodesy = "0ef565a4-170c-5f04-8de2-149903a85f3d"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+LightXML = "9c8b4983-aa76-5018-a973-4c85ecc9e179"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ORCA = "47be7bcc-f1a6-5447-8b36-7eeeff7534fd"
+PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
+SeisIO = "b372bb87-02dd-52bb-bcf6-c30dd83fd342"
+SeisNoise = "8cc7c3c0-6b5d-11e9-39fe-c9cd0236e08b"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Triangle = "56f361f5-126b-55db-87fb-1c71988fcde4"
+
 [compat]
 julia = "1.1"
 
