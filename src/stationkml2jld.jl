@@ -20,7 +20,7 @@ function stationdensity_selection(InputDict::Dict)
     # parse kml station file
     println("---Parse KML file---")
     xdoc = parse_file(kmlfile);
-    xroot = root(xdoc);
+    xroot = LightXML.root(xdoc);
     ces = collect(child_elements(xroot));
 
     itmp = 1
