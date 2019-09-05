@@ -2,7 +2,7 @@ export plot_dvv
 
 function plot_dvv(InputDict::Dict)
 
-    basefiname      = InputDict["basefiname"]
+    basefiname = InputDict["basefiname"]
     triangulationfiname = InputDict["triangulationfiname"]
     outputformat = InputDict["outputformat"]
     plotfig = InputDict["plotfig"]
@@ -15,7 +15,7 @@ function plot_dvv(InputDict::Dict)
     # load existin dvv histories
     basefidir = basefiname[1:end-length(basename(basefiname))]
     dvvpath = ls(basefidir)
-    dvvstalist = Array{String, 1}(undef,0)
+    dvvstalist = Array{String,1}(undef, 0)
 
     for path in dvvpath
         bn = split(basename(path)[length(basename(basefiname))+1:end], "-")
@@ -29,7 +29,7 @@ function plot_dvv(InputDict::Dict)
         catch
             #println(path)
             # remove this pair from list
-            passid = findfirst(x-> x==path, dvvpath)
+            passid = findfirst(x -> x == path, dvvpath)
             dvvpath = dvvpath[setdiff(1:end, passid), :]
         end
     end
@@ -42,8 +42,6 @@ function plot_dvv(InputDict::Dict)
     stday = Inf
     etday = 0
 
-    #DEBUG
-
     for tri in tris
         centerlonlat = tri["centerxy"]
         edgeinfo = tri["edgeinfo"]
@@ -52,17 +50,16 @@ function plot_dvv(InputDict::Dict)
         dvvsum = []
         Tsum = []
 
-	#println("tri $tri")
-        
-	for edge in edgeinfo
+		#println("tri $tri")
+
+        for edge in edgeinfo
             stn1 = edge[1]
             stn2 = edge[2]
 
-
             #println((stn1, stn2))
             # search corresponding dvv history
-            dvvid = findfirst(x->x == (stn1, stn2), dvvstalist)
-            dvvidrev = findfirst(x->x == (stn2, stn1), dvvstalist)
+            dvvid = findfirst(x -> x == (stn1, stn2), dvvstalist)
+            dvvidrev = findfirst(x -> x == (stn2, stn1), dvvstalist)
 
             if !isnothing(dvvid)
                 fipath = dvvpath[dvvid]
@@ -74,10 +71,8 @@ function plot_dvv(InputDict::Dict)
 
             try
                 fiedge = jldopen(fipath, "r")
-		
-		println(fiedge["dvv"][1:10])
-                
-		push!(Tsum, fiedge["T"])
+
+                push!(Tsum, fiedge["T"])
                 push!(dvvsum, fiedge["dvv"])
 
                 close(fiedge)
@@ -89,53 +84,30 @@ function plot_dvv(InputDict::Dict)
         avgdvv = []
         avgT = []
 
-	println("start average")
+        println("start average")
 
-	println(length(Tsum))
-	println(length(Tsum[1]))
-        
-	for tsumid = 1:length(Tsum)
+        for tsumid = 1:length(Tsum)
             for ii = 1:length(Tsum[tsumid])
-                # try to average at this time
+				# try to average at this time
                 testtavg = Tsum[tsumid][ii]
                 dvvtemp = []
 
-		#if !any(isnan.(dvvsum[tsumid]))
-		#	println(dvvsum[tsumid])
-		#end
+                if isnothing(findfirst(x -> x == testtavg, avgT))
+					# aveeraging this timestep
 
-		if ii>1 && ii < 5
-		println(isnothing(findfirst(x -> x==testtavg, avgT)))
-		end
-
-                if isnothing(findfirst(x -> x==testtavg, avgT))
-                    # aveeraging this timestep
-                    
-		    edgecount = 0
+                    edgecount = 0
                     for jj = 1:length(Tsum)
-                        oid = findfirst(x -> x==testtavg, Tsum[jj])
+                        oid = findfirst(x -> x == testtavg, Tsum[jj])
 
-			println(testtavg)
-			println(oid)
-			println(!isnothing(oid) && !isnan(dvvsum[jj][oid]))
                         if !isnothing(oid) && !isnan(dvvsum[jj][oid])
-				println(dvvsum[jj][oid])
-			    # avoid summing up NaN value
-                            	push!(dvvtemp, dvvsum[jj][oid])
-                            	edgecount += 1
-			else
-				#println("debug: NaNskip")
+							# avoid summing up NaN value
+							# debuged: index is jj on dvvsum
+                            push!(dvvtemp, dvvsum[jj][oid])
+                            edgecount += 1
+                        else
+
                         end
                     end
-		   
-		    println(edgecount)
-		    if edgecount > 0
-                    print("debug ")
-		    print(dvvtemp)
-		    println("")
-		    end
-
-		    #dvvtemp = filter(!isnan, Array{Float64, 1}(dvvtemp))
 
                     #println(dvvtemp)
 
@@ -149,28 +121,31 @@ function plot_dvv(InputDict::Dict)
                 end
             end
         end
-	
-	if !any(iszero.(avgdvv))
-	println("success")
-	else
-	println(iszero.(avgdvv))
-	println("avgdvv NaN")
-	end
+
+        if !any(iszero.(avgdvv))
+            println("success")
+        else
+            println(iszero.(avgdvv))
+            println("avgdvv NaN")
+        end
 
         sortid = sortperm(avgT)
         avgT = avgT[sortid]
         avgdvv = avgdvv[sortid]
         avgT = convert(Array{Int64,1}, avgT)
-        avgvv =  convert(Array{Float64,1}, avgdvv)
+        avgvv = convert(Array{Float64,1}, avgdvv)
         # println(sortid)
-
 
         # smoothing dv/v
         if InputDict["smoothing"]
-            trace1 = PlotlyJS.scatter(x=timestamp.(avgT), y=avgdvv)
-            SeisNoise.smooth!(avgdvv; half_win=5)
+            trace1 = PlotlyJS.scatter(x = timestamp.(avgT), y = avgdvv)
+            SeisNoise.smooth!(avgdvv; half_win = 5)
             #println(avgdvv)
-            trace2 = PlotlyJS.scatter(x=timestamp.(avgT), y=avgdvv, label="after smooth")
+            trace2 = PlotlyJS.scatter(
+                x = timestamp.(avgT),
+                y = avgdvv,
+                label = "after smooth"
+            )
             p = PlotlyJS.plot([trace1, trace2])
             display(p)
             readline()
@@ -179,51 +154,58 @@ function plot_dvv(InputDict::Dict)
         if !isempty(avgT)
             stday_test = avgT[1]
             etday_test = avgT[end]
-            if stday_test < stday stday = stday_test; end
-            if etday_test > etday etday = etday_test; end
+            if stday_test < stday
+                stday = stday_test
+            end
+            if etday_test > etday
+                etday = etday_test
+            end
         end
-
 
         push!(loc_and_dvv, (centerlonlat, edgeinfo, avgT, avgdvv))
 
     end
 
-    dvvdata = Dict( "startday" => timestamp(stday),
-                    "endday" => timestamp(etday),
-                    "loc_and_dvv" => loc_and_dvv)
+    dvvdata = Dict(
+        "startday" => timestamp(stday),
+        "endday" => timestamp(etday),
+        "loc_and_dvv" => loc_and_dvv
+    )
 
     # save data
     tstamp = timestamp(stday)
 
     if outputformat == "hdf5"
 
-        tstamp =  timestamp(stday)
-        foname = basefidir*"/../spatialdvv_$(tstamp).h5"
+        tstamp = timestamp(stday)
+        foname = basefidir * "/../spatialdvv_$(tstamp).h5"
 
-        if ispath(foname) rm(foname); end
+        if ispath(foname)
+            rm(foname)
+        end
 
         h5open(foname, "w") do file
 
             gorigin = "spatiotemporal_dvv" #original group name
 
-            write(file, gorigin*"/startday",  dvvdata["startday"])
-            write(file, gorigin*"/endday", dvvdata["endday"])
+            write(file, gorigin * "/startday", dvvdata["startday"])
+            write(file, gorigin * "/endday", dvvdata["endday"])
 
             loc_and_dvv = dvvdata["loc_and_dvv"]
 
             #create group on each element
             for i = 1:length(loc_and_dvv)
-                centerlonlat  = loc_and_dvv[i][1]
-                edgeinfo      = loc_and_dvv[i][2]
-                T             = loc_and_dvv[i][3]
-                dvvsum        = loc_and_dvv[i][4]
+                centerlonlat = loc_and_dvv[i][1]
+                edgeinfo = loc_and_dvv[i][2]
+                T = loc_and_dvv[i][3]
+                dvvsum = loc_and_dvv[i][4]
 
                 groupname = join([gorigin, "ele$i"], "/")
 
-                write(file, groupname*"/dvv", Array{Float64, 1}(dvvsum))
-                write(file, groupname*"/centerlon", centerlonlat[1])
-                write(file, groupname*"/centerlat", centerlonlat[2])
-                write(file, groupname*"/T", Array{Int64, 1}(T))
+                write(file, groupname * "/dvv", Array{Float64,1}(dvvsum))
+                write(file, groupname * "/centerlon", centerlonlat[1])
+                write(file, groupname * "/centerlat", centerlonlat[2])
+                write(file, groupname * "/T", Array{Int64,1}(T))
 
                 for edgeid = 1:length(edgeinfo)
                     edge = edgeinfo[edgeid]
@@ -232,10 +214,10 @@ function plot_dvv(InputDict::Dict)
 
                     edgegroupname = join([groupname, "edges$(edgeid)"], "/")
 
-                    write(file, edgegroupname*"/sta1", sta1)
-                    write(file, edgegroupname*"/sta1edge", edge[3])
-                    write(file, edgegroupname*"/sta2", sta2)
-                    write(file, edgegroupname*"/sta2edge", edge[4])
+                    write(file, edgegroupname * "/sta1", sta1)
+                    write(file, edgegroupname * "/sta1edge", edge[3])
+                    write(file, edgegroupname * "/sta2", sta2)
+                    write(file, edgegroupname * "/sta2edge", edge[4])
 
                 end
             end
@@ -244,8 +226,10 @@ function plot_dvv(InputDict::Dict)
 
     elseif outputformat == "jld2"
 
-        foname = basefidir*"/../spatialdvv_$(tstamp).jld2"
-        if ispath(foname) rm(foname); end
+        foname = basefidir * "/../spatialdvv_$(tstamp).jld2"
+        if ispath(foname)
+            rm(foname)
+        end
 
         outfile = jldopen(foname, "w")
         outfile["dvvdata"] = dvvdata
@@ -257,7 +241,9 @@ function plot_dvv(InputDict::Dict)
 
     if plotfig
         fodir = "./fig"
-        if !ispath(fodir) mkpath(fodir); end
+        if !ispath(fodir)
+            mkpath(fodir)
+        end
 
         println("Plot figure is is working in progress. Please use Matlab or Python to plot.")
         #
