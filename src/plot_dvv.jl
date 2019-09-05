@@ -42,6 +42,8 @@ function plot_dvv(InputDict::Dict)
     stday = Inf
     etday = 0
 
+    #DEBUG
+
     for tri in tris
         centerlonlat = tri["centerxy"]
         edgeinfo = tri["edgeinfo"]
@@ -50,9 +52,12 @@ function plot_dvv(InputDict::Dict)
         dvvsum = []
         Tsum = []
 
-        for edge in edgeinfo
+	#println("tri $tri")
+        
+	for edge in edgeinfo
             stn1 = edge[1]
             stn2 = edge[2]
+
 
             #println((stn1, stn2))
             # search corresponding dvv history
@@ -69,40 +74,72 @@ function plot_dvv(InputDict::Dict)
 
             try
                 fiedge = jldopen(fipath, "r")
-
-                push!(Tsum, fiedge["T"])
+		
+		println(fiedge["dvv"][1:10])
+                
+		push!(Tsum, fiedge["T"])
                 push!(dvvsum, fiedge["dvv"])
 
                 close(fiedge)
             catch
-                #println("debug: load error edge loading.")
+                println("debug: load error edge loading.")
             end
         end
 
         avgdvv = []
         avgT = []
 
-        for tsumid = 1:length(Tsum)
+	println("start average")
+
+	println(length(Tsum))
+	println(length(Tsum[1]))
+        
+	for tsumid = 1:length(Tsum)
             for ii = 1:length(Tsum[tsumid])
                 # try to average at this time
                 testtavg = Tsum[tsumid][ii]
                 dvvtemp = []
 
+		#if !any(isnan.(dvvsum[tsumid]))
+		#	println(dvvsum[tsumid])
+		#end
+
+		if ii>1 && ii < 5
+		println(isnothing(findfirst(x -> x==testtavg, avgT)))
+		end
+
                 if isnothing(findfirst(x -> x==testtavg, avgT))
-                    # this time step is already averaged
-                    overlapid = zeros(length(Tsum))
-                    edgecount = 0
+                    # aveeraging this timestep
+                    
+		    edgecount = 0
                     for jj = 1:length(Tsum)
                         oid = findfirst(x -> x==testtavg, Tsum[jj])
-                        if !isnothing(oid)
-                            push!(dvvtemp, dvvsum[tsumid][oid])
-                            edgecount += 1
+
+			println(testtavg)
+			println(oid)
+			println(!isnothing(oid) && !isnan(dvvsum[jj][oid]))
+                        if !isnothing(oid) && !isnan(dvvsum[jj][oid])
+				println(dvvsum[jj][oid])
+			    # avoid summing up NaN value
+                            	push!(dvvtemp, dvvsum[jj][oid])
+                            	edgecount += 1
+			else
+				#println("debug: NaNskip")
                         end
                     end
+		   
+		    println(edgecount)
+		    if edgecount > 0
+                    print("debug ")
+		    print(dvvtemp)
+		    println("")
+		    end
 
-                    dvvtemp = filter(!isnan, Array{Float64, 1}(dvvtemp))
+		    #dvvtemp = filter(!isnan, Array{Float64, 1}(dvvtemp))
+
+                    #println(dvvtemp)
+
                     if !isempty(dvvtemp) && edgecount > 0
-                        #no data at this time
                         push!(avgT, testtavg)
                         push!(avgdvv, mean(dvvtemp))
                     else
@@ -112,6 +149,13 @@ function plot_dvv(InputDict::Dict)
                 end
             end
         end
+	
+	if !any(iszero.(avgdvv))
+	println("success")
+	else
+	println(iszero.(avgdvv))
+	println("avgdvv NaN")
+	end
 
         sortid = sortperm(avgT)
         avgT = avgT[sortid]
@@ -125,7 +169,7 @@ function plot_dvv(InputDict::Dict)
         if InputDict["smoothing"]
             trace1 = PlotlyJS.scatter(x=timestamp.(avgT), y=avgdvv)
             SeisNoise.smooth!(avgdvv; half_win=5)
-            println(avgdvv)
+            #println(avgdvv)
             trace2 = PlotlyJS.scatter(x=timestamp.(avgT), y=avgdvv, label="after smooth")
             p = PlotlyJS.plot([trace1, trace2])
             display(p)
