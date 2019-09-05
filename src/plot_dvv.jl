@@ -18,13 +18,17 @@ function plot_dvv(InputDict::Dict)
     dvvstalist = Array{String, 1}(undef,0)
 
     for path in dvvpath
-        bn = split(basename(path)[length(basename(basefiname))+1:end], ".")
+        bn = split(basename(path)[length(basename(basefiname))+1:end], "-")
         try
-            s1 = join(bn[1:2], ".")
-            s2 = join(bn[5:6], ".")
+            s1 = bn[1]
+            s2 = bn[2]
+            comp = bn[3][1:2]
+
+            # TODO: 3 components cross-correlation.
             dvvstalist = vcat(dvvstalist, (s1, s2))
         catch
             #println(path)
+            # remove this pair from list
             passid = findfirst(x-> x==path, dvvpath)
             dvvpath = dvvpath[setdiff(1:end, passid), :]
         end
