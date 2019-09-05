@@ -122,12 +122,12 @@ function plot_dvv(InputDict::Dict)
             end
         end
 
-        if !any(iszero.(avgdvv))
-            println("success")
-        else
-            println(iszero.(avgdvv))
-            println("avgdvv NaN")
-        end
+        # if !any(iszero.(avgdvv))
+        #     println("success")
+        # else
+        #     println(iszero.(avgdvv))
+        #     println("avgdvv NaN")
+        # end
 
         sortid = sortperm(avgT)
         avgT = avgT[sortid]
