@@ -1,15 +1,15 @@
-export plot_dvv
+export spatial_dvv
 
-function plot_dvv(InputDict::Dict)
+function spatial_dvv(InputDict::Dict)
 
-    basefiname = InputDict["basefiname"]
+    basefiname 			= InputDict["basefiname"]
     triangulationfiname = InputDict["triangulationfiname"]
-    outputformat = InputDict["outputformat"]
-    plotfig = InputDict["plotfig"]
-    figname = InputDict["figname"]
+    outputformat 		= InputDict["outputformat"]
+    plotfig 			= InputDict["plotfig"]
+    figname 			= InputDict["figname"]
 
-    #1 load data
-    t = jldopen(triangulationfiname)
+    # load data
+    t 	= jldopen(triangulationfiname)
     tris = t["tri"]
 
     # load existin dvv histories

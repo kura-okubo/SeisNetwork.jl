@@ -6,22 +6,22 @@ return stationlist which is density-averaged over space.
 """
 function stationdensity_selection(InputDict::Dict)
 
-    starttime = InputDict["starttime"]
-    endtime = InputDict["endtime"]
-    kmlfile = InputDict["kmlfile"]
-    studyarea = InputDict["studyarea"]
-    includenet = InputDict["includenet"]
-    priority = InputDict["priority"]
+    starttime   = InputDict["starttime"]
+    endtime     = InputDict["endtime"]
+    kmlfile     = InputDict["kmlfile"]
+    studyarea   = InputDict["studyarea"]
+    includenet  = InputDict["includenet"]
+    priority    = InputDict["priority"]
     TotalNumofStation = InputDict["TotalNumofStation"]
-    nx = InputDict["nx"]
-    ny = InputDict["ny"]
-    plotfig = InputDict["plotfig"]
+    nx          = InputDict["nx"]
+    ny          = InputDict["ny"]
+    IsPlotFigure     = InputDict["IsPlotFigure"]
 
     # parse kml station file
     println("---Parse KML file---")
-    xdoc = parse_file(kmlfile);
-    xroot = LightXML.root(xdoc);
-    ces = collect(child_elements(xroot));
+    xdoc    = parse_file(kmlfile);
+    xroot   = LightXML.root(xdoc);
+    ces     = collect(child_elements(xroot));
 
     itmp = 1
     stid = 0
@@ -37,13 +37,13 @@ function stationdensity_selection(InputDict::Dict)
         end
     end
 
-    s1 = ces[stid:end]
+    s1          = ces[stid:end]
 
-    stationnum = length(s1)
-
+    stationnum  = length(s1)
     stationlist = []
     # 1. read station info
     for i = 1:stationnum
+
         stationname = content(s1[i]["name"][1])
         stationloc = content(s1[i]["Point"][1]["coordinates"][1])
         coord_lon = parse.(Float64, split(stationloc, ","))[1]
@@ -54,11 +54,12 @@ function stationdensity_selection(InputDict::Dict)
         tl  =split(string(txt), ";")
         operatingtime =tl[findfirst(occursin.("Operating Range", tl))]
         startoptime =  DateTime(split(operatingtime)[3][1:10])
-        endtopime =  DateTime(split(operatingtime)[5][1:10])
+        endoptime   =  DateTime(split(operatingtime)[5][1:10])
 
         datacentertxt =tl[findfirst(occursin.("Data Center", tl))]
 
-        if startoptime <= starttime && endtime <= endtopime
+        if (startoptime <= starttime && endtime <= endoptime
+                && any(occursin.(stationname[1:2], includenet)))
             # take only stations which is operated over study time.
             st = Dict("stationname" => stationname,
                     "coord_lon" => coord_lon,
@@ -68,7 +69,9 @@ function stationdensity_selection(InputDict::Dict)
     end
 
     # 2. plot location
-    if plotfig
+    if IsPlotFigure
+
+        pyplot()
 
         fodir = "./fig"
         if !ispath(fodir) mkpath(fodir); end
@@ -76,18 +79,20 @@ function stationdensity_selection(InputDict::Dict)
         px = [stationlist[x]["coord_lon"] for x in 1:length(stationlist)]
         py = [stationlist[x]["coord_lat"] for x in 1:length(stationlist)]
         text = [stationlist[x]["stationname"] for x in 1:length(stationlist)]
-        p1 = scatter(x=px, y=py, mode="markers", text=text,
-                       textposition="top center")
 
-        layout = Layout(;width=1200, height=800, title="All station network",
-                        xaxis_range=[studyarea[4], studyarea[2]],
-                       yaxis_range=[studyarea[3], studyarea[1]],
-                       xaxis_title="lon",
-                       yaxis_title="lat",
-                       showlegend=false)
+        Plots.plot(bg=:white)
+        p1 = Plots.scatter!(px, py,
+                    markershape = :dtriangle,
+                    markersize = 12,
+                    label="",
+                    size=(1200,1200),
+                    xlabel = "lon",
+                    xlims = (studyarea[4], studyarea[2]),
+                    ylabel = "lat",
+                    ylims = (studyarea[3], studyarea[1]),
+                    aspect_ratio=:equal)
 
-         p = PlotlyJS.plot(p1, layout)
-         PlotlyJS.savefig(p, fodir*"/"*InputDict["figname"])
+        Plots.savefig(p1, fodir*"/"*InputDict["figname"])
 
     end
 
@@ -145,27 +150,25 @@ function stationdensity_selection(InputDict::Dict)
 
     r_stationlist = [stationlist[x] for x in collect(Iterators.flatten(r_stationidlist))]
 
-    if plotfig
-
-        fodir = "./fig"
+    if IsPlotFigure
 
         px = [r_stationlist[x]["coord_lon"] for x in 1:length(r_stationlist)]
         py = [r_stationlist[x]["coord_lat"] for x in 1:length(r_stationlist)]
         text = [r_stationlist[x]["stationname"] for x in 1:length(r_stationlist)]
-        p1 = scatter(x=px, y=py, mode="markers", text=text,
-                       textposition="top center")
 
+        Plots.plot(bg=:white)
+        p2 = Plots.scatter!(px, py,
+                    markershape = :dtriangle,
+                    markersize = 12,
+                    label="",
+                    size=(1200,1200),
+                    xlabel = "lon",
+                    xlims = (studyarea[4], studyarea[2]),
+                    ylabel = "lat",
+                    ylims = (studyarea[3], studyarea[1]),
+                    aspect_ratio=:equal)
 
-       layout = Layout(;width=1200, height=800, title="Density averaged station network",
-                       xaxis_range=[studyarea[4], studyarea[2]],
-                      yaxis_range=[studyarea[3], studyarea[1]],
-                      xaxis_title="lon",
-                      yaxis_title="lat",
-                      showlegend=false)
-
-        p = PlotlyJS.plot(p1, layout)
-        PlotlyJS.savefig(p, fodir*"/"*"densityaveraged_"*InputDict["figname"])
-
+        Plots.savefig(p2, fodir*"/"*"densityaveraged_"*InputDict["figname"])
     end
 
     #===

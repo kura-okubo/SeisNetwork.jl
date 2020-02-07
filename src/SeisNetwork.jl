@@ -1,13 +1,14 @@
 module SeisNetwork
 
-using SeisIO, SeisNoise, Triangle, LinearAlgebra, Statistics, Geodesy, JLD2, ORCA, PlotlyJS
+using SeisIO, SeisNoise, Printf, Triangle, LinearAlgebra, Statistics, Geodesy, JLD2, PyPlot, Plots
+using LightXML, Dates, HDF5, Distributed
 
-using LightXML, Dates, HDF5
 
 # import pre and post processing tools
 include("triangulation.jl")
 include("stationkml2jld.jl")
-include("plot_dvv.jl")
+include("spatial_dvv.jl")
+include("average_dvv.jl")
 
 
 
