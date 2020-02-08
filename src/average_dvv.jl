@@ -256,7 +256,7 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 		dvv_count_all[ifreq] 	= count(x -> !isnan(x), dvv_ifreq)
 		dvv_nonan_ind 			= findall(x -> !isnan(x), dvv_ifreq)
 
-		if isempty(dvv_nonan_ind)
+		if isempty(dvv_nonan_ind) ||  dvv_count_all[ifreq] < InputDict["minimumcount"]
 			# there is no value with this frequency band at this time
 			dvv_mean_all[ifreq] = NaN
 			dvv_std_all[ifreq] 	= NaN
