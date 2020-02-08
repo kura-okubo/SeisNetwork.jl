@@ -157,13 +157,16 @@ function readdvvfile(dvvfiname::String)
 	catch
 		return nothing;
 	end
-
-	C 			= fi["xcorr"]
+	
+	C = fi["xcorr"]
+	Cname			= C.name
+	Ccomp			= C.comp
 	T 			= unix2datetime.(fi["T"])
 	dvv 		= fi["dvv"]
 	stackmode	= fi["stackmode"]
 
-	dvvdict = Dict("xcorr" 	=> C,
+	dvvdict = Dict("name" 	=> Cname,
+			"comp"	=> Ccomp,
 				   "T" 		=> T,
 				   "dvv" 	=> dvv,
 				   "stackmode" => stackmode)
@@ -199,12 +202,15 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 			continue
 		end
 
-		C 	= dvv_dict["xcorr"]
+		#C 	= dvv_dict["xcorr"]
+		Cname = dvv_dict["name"]
+		Ccomp = dvv_dict["comp"]
+
 		# parse metadata
-		stn1 = join(split(C.name, ".")[1:2], ".")
-		stn2 = join(split(C.name, ".")[5:6], ".")
+		stn1 = join(split(Cname, ".")[1:2], ".")
+		stn2 = join(split(Cname, ".")[5:6], ".")
 		ct = get_corrtype([stn1, stn2])
-		comp = C.comp
+		comp = Ccomp
 
 		if any(occursin.(ct, InputDict["corrtype"])) && any(occursin.(comp, InputDict["components"]))
 			# this station pair has selected corrtype and component pair.
