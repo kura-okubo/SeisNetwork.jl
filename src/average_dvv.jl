@@ -78,11 +78,13 @@ function average_dvv(InputDict::Dict)
 	dvv_mean_all  = Array{Float32, 2}(undef, 0, Nfreqband)
 	dvv_std_all   = Array{Float32, 2}(undef, 0, Nfreqband)
 	dvv_count_all = Array{Float32, 2}(undef, 0, Nfreqband)
+	dvv_cc_all 	  = Array{Any, 1}(undef, length(timewindows))
 
 	for i = 1:length(timewindows)
 		dvv_mean_all 	= cat(dvv_mean_all, reshape(A[i][1], 1, Nfreqband), dims=1)
 		dvv_std_all 	= cat(dvv_std_all, reshape(A[i][2], 1, Nfreqband), dims=1)
 		dvv_count_all 	= cat(dvv_count_all, reshape(A[i][3], 1, Nfreqband), dims=1)
+		dvv_cc_all[i]	= A[i][4]
 	end
 
 	# @show dvv_mean_all
@@ -145,6 +147,53 @@ function average_dvv(InputDict::Dict)
 		end
 	end
 
+	if InputDict["Isoutputccstats"]
+		statsdir = figdir*"../fig_ccstats"
+		if !ispath(statsdir) mkdir(statsdir) end
+		println("---Compute cc stats---")
+
+		for (it, ts) = enumerate(tvec[1:InputDict["statsplotspan"]:end])
+
+			tvec_stamp = timestamp.(ts)
+			stamplabel = map(x -> x[1:10], tvec_stamp)
+
+			dvv_cc_t = dvv_cc_all[it]
+
+			jldopen(statsdir*"/dvv_averaged_stats_$(stamplabel).jld2", "a+") do fo
+				fo["freqband"]  = freqband
+				fo["timestamp"] = ts
+				fo["dvv_cc_t"]  = dvv_cc_t
+			end
+
+
+			for ifreq = 1:Nfreqband
+				freqmin = freqband[ifreq]
+				freqmax = freqband[ifreq+1]
+				dvv_cc = dvv_cc_t[:, ifreq]
+				stationpairnum = length(dvv_cc)
+				# store tvec and dvv
+				strfreq = @sprintf("%4.2f-%4.2f", round(freqmin, digits=2), round(freqmax, digits=2))
+
+				# plot histogram of unittime cc for all station pairs
+				ph = Plots.histogram(dvv_cc, bins = 21,
+				 				normalize=false,
+								label = "",
+								xlabel = "Correlation coefficient with stretching",
+								xlims = (-1.0, 1.0),
+								ylabel = "Count",
+								fillcolor = :blue,
+								fillalpha = 0.5,
+								title = stamplabel*":"*strfreq*"Hz"*" "*stationpairnum*"pairs",
+								size=(800,600))
+				figname = statsdir*"/dvv_averaged_cchist_$(stamplabel)_$(strfreq)Hz.png"
+				Plots.savefig(ph, figname)
+			end
+		end
+	end
+
+
+
+
     println("Averaging dvv has been successfully done.")
     return nothing
 
@@ -157,7 +206,7 @@ function readdvvfile(dvvfiname::String)
 	catch
 		return nothing;
 	end
-	
+
 	C = fi["xcorr"]
 	Cname			= C.name
 	Ccomp			= C.comp
@@ -196,6 +245,8 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 
 	dvv_all = Array{Float32, 2}(undef, 0, Nfreqband)
 
+	dvv_cc_all = Array{Float32, 2}(undef, Float32, 0, Nfreqband)
+
 	for dvv_dict in dvv_dict_all
 
 		if isnothing(dvv_dict)
@@ -229,6 +280,10 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 				# apply thresholding criteria
 				if dvv_dict["stackmode"] == "Stretching"
 					cc_temp  = cc[tt, :]
+
+					# append to cc all
+					dvv_cc_all = cat(dvv_cc_all, reshape(cc_temp, 1, Nfreqband), dims = 1)
+
 					for ifreq = 1:Nfreqband
 						if cc_temp[ifreq] < InputDict["ccthreshold"]
 							# filter out with small cc
@@ -270,7 +325,7 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 	elapsedtime =  (t2 - t1).value / 1e3
 	println(string(twin_left)*"-"*string(twin_right)*" is averaged with $(elapsedtime) second.")
 
-	return (dvv_mean_all, dvv_std_all, dvv_count_all)
+	return (dvv_mean_all, dvv_std_all, dvv_count_all, dvv_cc_all)
 end
 
 
