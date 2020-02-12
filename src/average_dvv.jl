@@ -245,7 +245,7 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 
 	dvv_all = Array{Float32, 2}(undef, 0, Nfreqband)
 
-	dvv_cc_all = Array{Float32, 2}(undef, Float32, 0, Nfreqband)
+	dvv_cc_all = Array{Float32, 2}(undef, 0, Nfreqband)
 
 	for dvv_dict in dvv_dict_all
 
