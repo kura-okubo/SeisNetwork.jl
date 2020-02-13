@@ -148,14 +148,15 @@ function average_dvv(InputDict::Dict)
 	end
 
 	if InputDict["Isoutputccstats"]
-		statsdir = figdir*"../fig_ccstats"
-		if !ispath(statsdir) mkdir(statsdir) end
+		statsdir = figdir*"/../fig_ccstats"
+		if ispath(statsdir); rm(statsdir, recursive=true); end
+		mkdir(statsdir)
 		println("---Compute cc stats---")
 
 		for (it, ts) = enumerate(tvec[1:InputDict["statsplotspan"]:end])
 
 			tvec_stamp = timestamp.(ts)
-			stamplabel = map(x -> x[1:10], tvec_stamp)
+			stamplabel = tvec_stamp[1:10]
 
 			dvv_cc_t = dvv_cc_all[it]
 
@@ -175,15 +176,15 @@ function average_dvv(InputDict::Dict)
 				strfreq = @sprintf("%4.2f-%4.2f", round(freqmin, digits=2), round(freqmax, digits=2))
 
 				# plot histogram of unittime cc for all station pairs
-				ph = Plots.histogram(dvv_cc, bins = 21,
+				ph = Plots.histogram(dvv_cc, bins = 42,
 				 				normalize=false,
 								label = "",
 								xlabel = "Correlation coefficient with stretching",
-								xlims = (-1.0, 1.0),
+								xlims = (0.0, 1.0),
 								ylabel = "Count",
 								fillcolor = :blue,
 								fillalpha = 0.5,
-								title = stamplabel*":"*strfreq*"Hz"*" "*stationpairnum*"pairs",
+								title = stamplabel*":"*strfreq*"Hz"*" $(stationpairnum) pairs",
 								size=(800,600))
 				figname = statsdir*"/dvv_averaged_cchist_$(stamplabel)_$(strfreq)Hz.png"
 				Plots.savefig(ph, figname)
