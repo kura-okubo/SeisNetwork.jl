@@ -259,8 +259,8 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 		Ccomp = dvv_dict["comp"]
 
 		# parse metadata
-		stn1 = join(split(Cname, ".")[1:2], ".")
-		stn2 = join(split(Cname, ".")[5:6], ".")
+		stn1 = join(split(Cname, ".")[1:4], ".")
+		stn2 = join(split(Cname, ".")[5:8], ".")
 		ct = get_corrtype([stn1, stn2])
 		comp = Ccomp
 
@@ -291,7 +291,7 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 							dvv_temp[ifreq] = NaN
 							# DEBUG:
 							#println(Cname*Ccomp)
-							
+
 						end
 					end
 				end
