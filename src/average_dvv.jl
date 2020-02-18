@@ -213,15 +213,16 @@ function readdvvfile(dvvfiname::String)
 	Ccomp			= C.comp
 	T 			= unix2datetime.(fi["T"])
 	dvv 		= fi["dvv"]
-	stackmode	= fi["stackmode"]
+	dvvmode	= fi["dvvmode"]
 
 	dvvdict = Dict("name" 	=> Cname,
-			"comp"	=> Ccomp,
+				   "comp"	=> Ccomp,
 				   "T" 		=> T,
 				   "dvv" 	=> dvv,
-				   "stackmode" => stackmode)
+				   "dvvmode" => dvvmode,
+				   "ccdist" => fi["ccdist"])
 
-	if fi["stackmode"] == "Stretching"
+	if fi["dvvmode"] == "Stretching"
 		dvvdict["cc"] = fi["cc"]
 	end
 	close(fi)
@@ -269,8 +270,9 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 
 			tind = findall(x -> (x >= twin_left-buffer_twin && x <= twin_right - buffer_twin), dvv_dict["T"])
 			dvv = dvv_dict["dvv"]
+			ccdist 	= dvv_dict["ccdist"]
 
-			if dvv_dict["stackmode"] == "Stretching"
+			if dvv_dict["dvvmode"] == "Stretching"
 				cc 	= dvv_dict["cc"]
 			end
 
@@ -279,14 +281,15 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 				dvv_temp = dvv[tt, :]
 
 				# apply thresholding criteria
-				if dvv_dict["stackmode"] == "Stretching"
+				if dvv_dict["dvvmode"] == "Stretching"
 					cc_temp  = cc[tt, :]
-
+					ccdist_temp = ccdist[tt, :]
 					# append to cc all
 					dvv_cc_all = cat(dvv_cc_all, reshape(cc_temp, 1, Nfreqband), dims = 1)
 
 					for ifreq = 1:Nfreqband
-						if cc_temp[ifreq] < InputDict["ccthreshold"]
+						#if cc_temp[ifreq] < InputDict["ccthreshold"]
+						if (cc_temp[ifreq] < InputDict["ccthreshold"]) || (ccdist_temp > InputDict["ccdistance_threshold"])
 							# filter out with small cc
 							dvv_temp[ifreq] = NaN
 							# DEBUG:
