@@ -289,6 +289,9 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 						if cc_temp[ifreq] < InputDict["ccthreshold"]
 							# filter out with small cc
 							dvv_temp[ifreq] = NaN
+							# DEBUG:
+							#println(Cname*Ccomp)
+							
 						end
 					end
 				end
