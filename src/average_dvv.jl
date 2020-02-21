@@ -289,8 +289,7 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 
 					for ifreq = 1:Nfreqband
 						#if cc_temp[ifreq] < InputDict["ccthreshold"]
-						if (cc_temp[ifreq] < InputDict["ccthreshold"]) || (ccdist_temp[ifreq] > InputDict["ccdistance_threshold"])
-										|| (abs(dvv_temp[ifreq]) > InputDict["max_clipdvv"])
+						if (cc_temp[ifreq] < InputDict["ccthreshold"]) || (ccdist_temp[ifreq] > InputDict["ccdistance_threshold"]) || (abs(dvv_temp[ifreq]) > InputDict["max_clipdvv"])
 							# filter out with small cc
 							dvv_temp[ifreq] = NaN
 							# DEBUG:
