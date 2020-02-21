@@ -289,7 +289,8 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 
 					for ifreq = 1:Nfreqband
 						#if cc_temp[ifreq] < InputDict["ccthreshold"]
-						if (cc_temp[ifreq] < InputDict["ccthreshold"]) || (ccdist_temp[ifreq] > InputDict["ccdistance_threshold"]) # || abs(dvv_temp[ifreq]) > 1.0 
+						if (cc_temp[ifreq] < InputDict["ccthreshold"]) || (ccdist_temp[ifreq] > InputDict["ccdistance_threshold"])
+										|| (abs(dvv_temp[ifreq]) > InputDict["max_clipdvv"])
 							# filter out with small cc
 							dvv_temp[ifreq] = NaN
 							# DEBUG:
@@ -297,13 +298,13 @@ function map_average_dvv(timewindow::Tuple, InputDict::Dict, dvv_dict_all::Abstr
 						end
 
 						#DEBUG
-						if (ifreq==7) && (abs(dvv_temp[ifreq]) > 1.0) && (cc_temp[ifreq] >= InputDict["ccthreshold"]) && (ccdist_temp[ifreq] < InputDict["ccdistance_threshold"])
-					println(twin_left)
-					println(Cname*Ccomp*" has large dvv_temp. debug.")
-					@show dvv_temp[ifreq]
-					@show cc_temp[ifreq]
-					@show ccdist_temp[ifreq]
-						end
+						# if (ifreq==7) && (abs(dvv_temp[ifreq]) > 1.0) && (cc_temp[ifreq] >= InputDict["ccthreshold"]) && (ccdist_temp[ifreq] < InputDict["ccdistance_threshold"])
+						# 	println(twin_left)
+						# 	println(Cname*Ccomp*" has large dvv_temp. debug.")
+						# 	@show dvv_temp[ifreq]
+						# 	@show cc_temp[ifreq]
+						# 	@show ccdist_temp[ifreq]
+						# end
 					end
 				end
 
